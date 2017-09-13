@@ -42,6 +42,8 @@ type Client struct {
 	engine *Engine
 	conn   transport.Conn
 
+	connClosed bool
+
 	clientID     string
 	cleanSession bool
 	session      Session
@@ -109,6 +111,8 @@ func (c *Client) Close(clean bool) {
 		// mark client as cleanly disconnected
 		c.state.set(clientDisconnected)
 	}
+
+	c.connClosed = true
 
 	// close underlying connection (triggers cleanup)
 	c.conn.Close()
@@ -675,4 +679,9 @@ func (c *Client) log(event LogEvent, client *Client, pkt packet.Packet, msg *pac
 	if c.engine.Logger != nil {
 		c.engine.Logger(event, client, pkt, msg, err)
 	}
+}
+
+// ConnClosed return the connection closed flag
+func (c *Client) ConnClosed() bool {
+	return c.connClosed
 }
