@@ -42,7 +42,7 @@ type Client struct {
 	engine *Engine
 	conn   transport.Conn
 
-	closed bool
+	replaced bool
 
 	clientID     string
 	cleanSession bool
@@ -111,10 +111,6 @@ func (c *Client) Close(clean bool) {
 		// mark client as cleanly disconnected
 		c.state.set(clientDisconnected)
 	}
-
-	c.mutex.Lock()
-	c.closed = true
-	c.mutex.Unlock()
 
 	// close underlying connection (triggers cleanup)
 	c.conn.Close()
@@ -683,7 +679,15 @@ func (c *Client) log(event LogEvent, client *Client, pkt packet.Packet, msg *pac
 	}
 }
 
-// Closed return if the client is closed
-func (c *Client) Closed() bool {
-	return c.closed
+// Replace will close self and mark the replaced flag
+func (c *Client) Replace() {
+	c.Close(true)
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+	c.replaced = true
+}
+
+// Replaced return if the client is replaced by new client
+func (c *Client) Replaced() bool {
+	return c.replaced
 }
