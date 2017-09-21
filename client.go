@@ -42,7 +42,7 @@ type Client struct {
 	engine *Engine
 	conn   transport.Conn
 
-	connClosed bool
+	closed bool
 
 	clientID     string
 	cleanSession bool
@@ -112,7 +112,9 @@ func (c *Client) Close(clean bool) {
 		c.state.set(clientDisconnected)
 	}
 
-	c.connClosed = true
+	c.mutex.Lock()
+	c.closed = true
+	c.mutex.Unlock()
 
 	// close underlying connection (triggers cleanup)
 	c.conn.Close()
@@ -681,7 +683,7 @@ func (c *Client) log(event LogEvent, client *Client, pkt packet.Packet, msg *pac
 	}
 }
 
-// ConnClosed return the connection closed flag
-func (c *Client) ConnClosed() bool {
-	return c.connClosed
+// Closed return if the client is closed
+func (c *Client) Closed() bool {
+	return c.closed
 }
